@@ -8,6 +8,10 @@
 [build.environment]
   NODE_VERSION = "18"
 
+# 自动安装 Functions 依赖
+[[plugins]]
+  package = "@netlify/plugin-functions-install-core"
+
 [[redirects]]
   from = "/api/a"
   to = "/.netlify/functions/a_stock_moneyflow"
