@@ -1,0 +1,12 @@
+{
+  "name": "stock-moneyflow-netlify",
+  "version": "1.0.0",
+  "description": "A 股和美股资金流数据定时任务",
+  "scripts": {
+    "dev": "netlify dev",
+    "build": "echo 'No build needed'"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.0.0"
+  }
+}
