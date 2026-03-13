@@ -7,7 +7,21 @@ exports.handler = async (event, context) => {
       headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
     });
 
-    const data = response.data || [];
+    console.log('Response:', response.data);
+    const data = Array.isArray(response.data) ? response.data : [];
+    
+    if (data.length === 0) {
+      return {
+        statusCode: 200,
+        body: JSON.stringify({ 
+          date: new Date().toISOString(), 
+          market: 'A 股', 
+          ranking: [],
+          message: 'No data available (可能非交易时间)'
+        }, null, 2)
+      };
+    }
+
     const sorted = data.sort((a, b) => (parseFloat(b.netmoney)||0) - (parseFloat(a.netmoney)||0));
 
     const ranking = sorted.map((item, i) => ({
@@ -22,7 +36,7 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 200,
       body: JSON.stringify({ 
-        date: new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }), 
+        date: new Date().toISOString(), 
         market: 'A 股', 
         ranking 
       }, null, 2),
@@ -32,6 +46,7 @@ exports.handler = async (event, context) => {
       }
     };
   } catch (error) {
+    console.error('Error:', error);
     return { 
       statusCode: 500, 
       body: JSON.stringify({ error: error.message }),

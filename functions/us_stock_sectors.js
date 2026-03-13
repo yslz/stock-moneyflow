@@ -49,7 +49,7 @@ exports.handler = async () => {
     return { 
       statusCode: 200, 
       body: JSON.stringify({ 
-        date: new Date().toLocaleString('zh-CN', { timeZone: 'America/New_York' }), 
+        date: new Date().toISOString(), 
         market: '美股', 
         ranking 
       }, null, 2),
