@@ -1,25 +1,13 @@
 [build]
-  # Python 函数需要指定 runtime
   functions = "functions"
-  # 发布目录
   publish = "public"
 
-# 配置 Python runtime
 [functions]
   node_bundler = "esbuild"
 
-# 环境变量
 [build.environment]
-  PYTHON_VERSION = "3.9"
+  NODE_VERSION = "18"
 
-# 强制包含 public 目录中的文件
-[[headers]]
-  for = "/*"
-  [headers.values]
-    X-Frame-Options = "DENY"
-    X-XSS-Protection = "1; mode=block"
-
-# 重定向规则
 [[redirects]]
   from = "/api/a"
   to = "/.netlify/functions/a_stock_moneyflow"
@@ -29,10 +17,3 @@
   from = "/api/us"
   to = "/.netlify/functions/us_stock_sectors"
   status = 200
-
-# 确保 index.html 被正确处理
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-  force = false
