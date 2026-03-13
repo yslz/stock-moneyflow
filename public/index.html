@@ -110,6 +110,7 @@
         .data-time {
             color: #666;
             font-size: 0.9em;
+            margin-top: 5px;
         }
 
         .refresh-btn {
@@ -217,6 +218,18 @@
             100% { transform: rotate(360deg); }
         }
 
+        .empty-message {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 1.1em;
+            display: none;
+        }
+
+        .empty-message.active {
+            display: block;
+        }
+
         @media (max-width: 768px) {
             h1 { font-size: 1.8em; }
             .btn { padding: 12px 25px; font-size: 1em; }
@@ -241,6 +254,11 @@
 
         <div class="error-message" id="error"></div>
 
+        <div class="empty-message" id="empty">
+            <p>😕 暂无数据</p>
+            <p style="font-size: 0.9em; margin-top: 10px; color: #999;">可能原因：非交易时间 / 周末 / 节假日</p>
+        </div>
+
         <div class="data-container" id="dataContainer">
             <div class="data-header">
                 <div>
@@ -254,9 +272,9 @@
                     <tr>
                         <th>排名</th>
                         <th id="col1">板块</th>
-                        <th id="col2">净流入</th>
-                        <th id="col3">流入</th>
-                        <th id="col4">流出</th>
+                        <th id="col2">净流入 (亿)</th>
+                        <th id="col3">流入 (亿)</th>
+                        <th id="col4">流出 (亿)</th>
                         <th>涨跌幅</th>
                     </tr>
                 </thead>
@@ -274,6 +292,7 @@
             document.getElementById('loading').classList.add('active');
             document.getElementById('dataContainer').classList.remove('active');
             document.getElementById('error').classList.remove('active');
+            document.getElementById('empty').classList.remove('active');
 
             // 禁用按钮
             document.querySelectorAll('.btn').forEach(btn => btn.classList.add('loading'));
@@ -290,6 +309,12 @@
                 }
 
                 const data = await response.json();
+                
+                // 检查是否有错误
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
                 currentMarket = market;
                 currentData = data;
 
@@ -308,9 +333,23 @@
             const time = document.getElementById('dataTime');
             const body = document.getElementById('dataBody');
 
+            // 检查空数据
+            if (!data.ranking || data.ranking.length === 0) {
+                container.classList.remove('active');
+                document.getElementById('empty').classList.add('active');
+                return;
+            }
+
             // 设置标题
             title.textContent = data.market === 'A 股' ? '🇨🇳 A 股板块资金流排名' : '🇺🇸 美股板块表现排名';
-            time.textContent = `数据时间：${data.date}`;
+            
+            // 安全处理时间
+            try {
+                const dateObj = new Date(data.date);
+                time.textContent = `数据时间：${dateObj.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}`;
+            } catch (e) {
+                time.textContent = `数据时间：${data.date}`;
+            }
 
             // 设置列名
             if (data.market === 'A 股') {
@@ -347,7 +386,7 @@
                             <td>${index + 1}</td>
                             <td>${item.name} (${item.symbol})</td>
                             <td>$${item.price.toFixed(2)}</td>
-                            <td>${item.volume.toLocaleString()}</td>
+                            <td>${item.volume ? item.volume.toLocaleString() : 'N/A'}</td>
                             <td class="${changeClass}">${changeSign}${item.change_pct.toFixed(2)}%</td>
                         </tr>
                     `;
