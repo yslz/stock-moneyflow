@@ -1,13 +1,58 @@
-        .data-container.active {
-            display: block;
-            animation: fadeIn 0.5s ease;
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>股票资金流排名</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
         }
-
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .button-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 15px 40px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .btn-a { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; }
+        .btn-us { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; }
+        .btn:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+        .btn.loading { opacity: 0.7; cursor: not-allowed; }
+        .data-container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            display: none;
+        }
+        .data-container.active { display: block; animation: fadeIn 0.5s ease; }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
         .data-header {
             display: flex;
             justify-content: space-between;
@@ -16,19 +61,8 @@
             padding-bottom: 15px;
             border-bottom: 2px solid #f0f0f0;
         }
-
-        .data-title {
-            font-size: 1.8em;
-            color: #333;
-            font-weight: bold;
-        }
-
-        .data-time {
-            color: #666;
-            font-size: 0.9em;
-            margin-top: 5px;
-        }
-
+        .data-title { font-size: 1.8em; color: #333; font-weight: bold; }
+        .data-time { color: #666; font-size: 0.9em; margin-top: 5px; }
         .refresh-btn {
             padding: 8px 20px;
             background: #667eea;
@@ -38,17 +72,8 @@
             cursor: pointer;
             font-size: 0.9em;
         }
-
-        .refresh-btn:hover {
-            background: #5568d3;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
+        .refresh-btn:hover { background: #5568d3; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -56,46 +81,18 @@
             text-align: left;
             font-weight: 600;
         }
-
-        th:first-child {
-            border-radius: 10px 0 0 0;
-            width: 60px;
-            text-align: center;
-        }
-
-        th:last-child {
-            border-radius: 0 10px 0 0;
-        }
-
-        td {
-            padding: 12px 15px;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        td:first-child {
-            text-align: center;
-            font-weight: bold;
-        }
-
-        tr:hover {
-            background: #f8f9fa;
-        }
-
+        th:first-child { border-radius: 10px 0 0 0; width: 60px; text-align: center; }
+        th:last-child { border-radius: 0 10px 0 0; text-align: center; }
+        td { padding: 12px 15px; border-bottom: 1px solid #f0f0f0; }
+        td:first-child { text-align: center; font-weight: bold; }
+        td:last-child { text-align: center; }
+        tr:hover { background: #f8f9fa; }
         tr:nth-child(1) td:first-child { color: #ffd700; font-size: 1.3em; }
         tr:nth-child(2) td:first-child { color: #c0c0c0; font-size: 1.2em; }
         tr:nth-child(3) td:first-child { color: #cd7f32; font-size: 1.1em; }
-
-        .positive {
-            color: #e74c3c;
-            font-weight: bold;
-        }
-
-        .negative {
-            color: #27ae60;
-            font-weight: bold;
-        }
-
-        .error-message {
+        .positive { color: #e74c3c; font-weight: bold; }
+        .negative { color: #27ae60; font-weight: bold; }
+        .error-message, .empty-message {
             background: #fee;
             color: #c33;
             padding: 20px;
@@ -104,21 +101,10 @@
             margin-top: 20px;
             display: none;
         }
-
-        .error-message.active {
-            display: block;
-        }
-
-        .loading-spinner {
-            text-align: center;
-            padding: 40px;
-            display: none;
-        }
-
-        .loading-spinner.active {
-            display: block;
-        }
-
+        .error-message.active, .empty-message.active { display: block; }
+        .empty-message { background: #fff3cd; color: #856404; }
+        .loading-spinner { text-align: center; padding: 40px; display: none; }
+        .loading-spinner.active { display: block; }
         .spinner {
             border: 4px solid #f3f3f3;
             border-top: 4px solid #667eea;
@@ -128,24 +114,10 @@
             animation: spin 1s linear infinite;
             margin: 0 auto 20px;
         }
-
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-
-        .empty-message {
-            text-align: center;
-            padding: 40px;
-            color: #666;
-            font-size: 1.1em;
-            display: none;
-        }
-
-        .empty-message.active {
-            display: block;
-        }
-
         @media (max-width: 768px) {
             h1 { font-size: 1.8em; }
             .btn { padding: 12px 25px; font-size: 1em; }
@@ -157,24 +129,19 @@
 <body>
     <div class="container">
         <h1>📊 股票资金流排名</h1>
-
         <div class="button-container">
             <button class="btn btn-a" onclick="loadData('a')">🇨🇳 A FLOW</button>
             <button class="btn btn-us" onclick="loadData('us')">🇺🇸 US FLOW</button>
         </div>
-
         <div class="loading-spinner" id="loading">
             <div class="spinner"></div>
             <p>正在加载数据...</p>
         </div>
-
         <div class="error-message" id="error"></div>
-
         <div class="empty-message" id="empty">
             <p>😕 暂无数据</p>
-            <p style="font-size: 0.9em; margin-top: 10px; color: #999;">可能原因：非交易时间 / 周末 / 节假日</p>
+            <p style="font-size: 0.9em; margin-top: 10px; color: #666;">可能原因：非交易时间 / 周末 / 节假日</p>
         </div>
-
         <div class="data-container" id="dataContainer">
             <div class="data-header">
                 <div>
@@ -187,9 +154,8 @@
                 <thead>
                     <tr>
                         <th>排名</th>
-                        <th id="col1">板块</th>
-                        <th id="col2">净流入 (万)</th>
-                        <th id="col3">主力净流入 (万)</th>
+                        <th>板块名称</th>
+                        <th>净流入 (万元)</th>
                         <th>涨跌幅</th>
                     </tr>
                 </thead>
@@ -197,19 +163,15 @@
             </table>
         </div>
     </div>
-
     <script>
         let currentMarket = '';
         let currentData = null;
 
         async function loadData(market) {
-            // 显示加载状态
             document.getElementById('loading').classList.add('active');
             document.getElementById('dataContainer').classList.remove('active');
             document.getElementById('error').classList.remove('active');
             document.getElementById('empty').classList.remove('active');
-
-            // 禁用按钮
             document.querySelectorAll('.btn').forEach(btn => btn.classList.add('loading'));
 
             try {
@@ -218,21 +180,17 @@
                     : '/.netlify/functions/us_stock_sectors';
 
                 const response = await fetch(endpoint);
-                
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
                 const data = await response.json();
-                
-                // 检查是否有错误
                 if (data.error) {
                     throw new Error(data.error);
                 }
 
                 currentMarket = market;
                 currentData = data;
-
                 displayData(data);
             } catch (error) {
                 showError(`加载失败：${error.message}`);
@@ -248,17 +206,14 @@
             const time = document.getElementById('dataTime');
             const body = document.getElementById('dataBody');
 
-            // 检查空数据
             if (!data.ranking || data.ranking.length === 0) {
                 container.classList.remove('active');
                 document.getElementById('empty').classList.add('active');
                 return;
             }
 
-            // 设置标题
-            title.textContent = data.market === 'A 股' ? '🇨🇳 A 股板块资金流排名' : '🇺🇸 美股板块表现排名';
+            title.textContent = data.market === 'A 股' ? '🇨🇳 A 股板块资金流排名' : '🇺🇸 美股板块资金流排名';
             
-            // 安全处理时间
             try {
                 const dateObj = new Date(data.date);
                 time.textContent = `数据时间：${dateObj.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}`;
@@ -266,43 +221,17 @@
                 time.textContent = `数据时间：${data.date}`;
             }
 
-            // 设置列名
-            if (data.market === 'A 股') {
-                document.getElementById('col1').textContent = '板块名称';
-                document.getElementById('col2').textContent = '净流入 (万)';
-                document.getElementById('col3').textContent = '主力净流入 (万)';
-            } else {
-                document.getElementById('col1').textContent = '板块名称';
-                document.getElementById('col2').textContent = '价格 ($)';
-                document.getElementById('col3').textContent = '成交量';
-            }
-
-            // 生成表格
             body.innerHTML = data.ranking.map((item, index) => {
                 const changeClass = item.change_pct >= 0 ? 'positive' : 'negative';
                 const changeSign = item.change_pct >= 0 ? '+' : '';
-
-                if (data.market === 'A 股') {
-                    return `
-                        <tr>
-                            <td>${index + 1}</td>
-                            <td>${item.name}</td>
-                            <td>${item.net_money.toFixed(2)}</td>
-                            <td>${item.inflow.toFixed(2)}</td>
-                            <td class="${changeClass}">${changeSign}${item.change_pct.toFixed(2)}%</td>
-                        </tr>
-                    `;
-                } else {
-                    return `
-                        <tr>
-                            <td>${index + 1}</td>
-                            <td>${item.name} (${item.symbol})</td>
-                            <td>$${item.price.toFixed(2)}</td>
-                            <td>${item.volume ? item.volume.toLocaleString() : 'N/A'}</td>
-                            <td class="${changeClass}">${changeSign}${item.change_pct.toFixed(2)}%</td>
-                        </tr>
-                    `;
-                }
+                return `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${item.name}</td>
+                        <td>${item.net_money.toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td class="${changeClass}">${changeSign}${item.change_pct.toFixed(2)}%</td>
+                    </tr>
+                `;
             }).join('');
 
             container.classList.add('active');
@@ -320,10 +249,7 @@
             }
         }
 
-        // 页面加载时自动加载 A 股数据
-        window.onload = () => {
-            loadData('a');
-        };
+        window.onload = () => { loadData('a'); };
     </script>
 </body>
 </html>

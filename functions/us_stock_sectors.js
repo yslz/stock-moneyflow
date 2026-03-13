@@ -1,25 +1,30 @@
 const axios = require('axios');
 
-const SECTORS = {
-  'XLK': 'Technology',
-  'XLV': 'Health Care',
-  'XLF': 'Financial',
-  'XLY': 'Consumer Cyclical',
-  'XLP': 'Consumer Defensive',
-  'XLI': 'Industrials',
-  'XLU': 'Utilities',
-  'XLB': 'Basic Materials',
-  'XLRE': 'Real Estate',
-  'XLC': 'Communication Svcs',
-  'XLE': 'Energy'
-};
-
-exports.handler = async () => {
+exports.handler = async (event, context) => {
   try {
-    const sectors = [];
-    for (const [sym, name] of Object.entries(SECTORS)) {
+    // 美股板块资金流 - 使用 AKShare 类似的思路
+    // 这里用模拟数据，因为美股板块资金流数据较难获取
+    // 实际应该调用专业的美股数据 API
+    
+    // 使用 sector performance 数据作为替代
+    const sectors = [
+      { name: 'Technology', symbol: 'XLK', net_money: 0, change_pct: 0 },
+      { name: 'Health Care', symbol: 'XLV', net_money: 0, change_pct: 0 },
+      { name: 'Financial', symbol: 'XLF', net_money: 0, change_pct: 0 },
+      { name: 'Consumer Cyclical', symbol: 'XLY', net_money: 0, change_pct: 0 },
+      { name: 'Consumer Defensive', symbol: 'XLP', net_money: 0, change_pct: 0 },
+      { name: 'Industrials', symbol: 'XLI', net_money: 0, change_pct: 0 },
+      { name: 'Utilities', symbol: 'XLU', net_money: 0, change_pct: 0 },
+      { name: 'Basic Materials', symbol: 'XLB', net_money: 0, change_pct: 0 },
+      { name: 'Real Estate', symbol: 'XLRE', net_money: 0, change_pct: 0 },
+      { name: 'Communication Svcs', symbol: 'XLC', net_money: 0, change_pct: 0 },
+      { name: 'Energy', symbol: 'XLE', net_money: 0, change_pct: 0 }
+    ];
+
+    // 获取每个板块 ETF 的数据
+    for (const sector of sectors) {
       try {
-        const res = await axios.get(`https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=1d`, { 
+        const res = await axios.get(`https://query1.finance.yahoo.com/v8/finance/chart/${sector.symbol}?interval=1d&range=1d`, { 
           headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' } 
         });
         const m = res.data.chart.result[0]?.meta;
@@ -27,25 +32,31 @@ exports.handler = async () => {
           const open = m.previousClose || m.chartPreviousClose;
           const close = m.regularMarketPrice || m.previousClose;
           const changePct = open ? (((close - open) / open) * 100) : 0;
-          sectors.push({ 
-            symbol: sym, 
-            name: name, 
-            price: parseFloat(close.toFixed(2)), 
-            change_pct: parseFloat(changePct.toFixed(2)) 
-          });
+          const volume = m.regularMarketVolume || 0;
+          
+          // 估算资金流（成交量 * 平均价格）
+          const estimatedFlow = (volume * close) / 10000;  // 转换为万美元
+          
+          sector.price = parseFloat(close.toFixed(2));
+          sector.change_pct = parseFloat(changePct.toFixed(2));
+          sector.net_money = parseFloat(estimatedFlow.toFixed(2));
+          sector.volume = volume;
         }
       } catch(e) {
-        console.error(`${sym} failed:`, e.message);
+        console.error(`${sector.symbol} failed:`, e.message);
       }
     }
-    const sorted = sectors.sort((a,b) => b.change_pct - a.change_pct);
+
+    // 按净流入排序
+    const sorted = sectors.sort((a,b) => b.net_money - a.net_money);
+
     const ranking = sorted.map((s,i) => ({ 
       rank: i+1, 
-      symbol: s.symbol, 
       name: s.name, 
-      price: s.price, 
+      net_money: s.net_money,
       change_pct: s.change_pct 
     }));
+
     return { 
       statusCode: 200, 
       body: JSON.stringify({ 
