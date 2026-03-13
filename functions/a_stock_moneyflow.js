@@ -54,7 +54,8 @@ exports.handler = async (event, context) => {
       body: JSON.stringify({ 
         date: new Date().toISOString(), 
         market: 'A 股', 
-        ranking 
+        ranking,
+        unit: '万元'
       }, null, 2),
       headers: {
         'Content-Type': 'application/json; charset=utf-8',

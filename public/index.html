@@ -63,6 +63,7 @@
         }
         .data-title { font-size: 1.8em; color: #333; font-weight: bold; }
         .data-time { color: #666; font-size: 0.9em; margin-top: 5px; }
+        .data-note { color: #999; font-size: 0.85em; margin-top: 5px; font-style: italic; }
         .refresh-btn {
             padding: 8px 20px;
             background: #667eea;
@@ -147,6 +148,7 @@
                 <div>
                     <div class="data-title" id="marketTitle"></div>
                     <div class="data-time" id="dataTime"></div>
+                    <div class="data-note" id="dataNote"></div>
                 </div>
                 <button class="refresh-btn" onclick="refreshData()">🔄 刷新</button>
             </div>
@@ -154,8 +156,9 @@
                 <thead>
                     <tr>
                         <th>排名</th>
-                        <th>板块名称</th>
-                        <th>净流入 (万元)</th>
+                        <th id="colName">板块名称</th>
+                        <th id="colSymbol" style="display:none;">ETF</th>
+                        <th id="colMoney">净流入</th>
                         <th>涨跌幅</th>
                     </tr>
                 </thead>
@@ -204,7 +207,9 @@
             const container = document.getElementById('dataContainer');
             const title = document.getElementById('marketTitle');
             const time = document.getElementById('dataTime');
+            const note = document.getElementById('dataNote');
             const body = document.getElementById('dataBody');
+            const colSymbol = document.getElementById('colSymbol');
 
             if (!data.ranking || data.ranking.length === 0) {
                 container.classList.remove('active');
@@ -221,17 +226,50 @@
                 time.textContent = `数据时间：${data.date}`;
             }
 
+            // 显示单位
+            if (data.unit) {
+                document.getElementById('colMoney').textContent = `净流入 (${data.unit})`;
+            }
+
+            // 显示备注
+            if (data.note) {
+                note.textContent = data.note;
+                note.style.display = 'block';
+            } else {
+                note.style.display = 'none';
+            }
+
+            // 美股显示 ETF 代码列
+            if (data.market === '美股') {
+                colSymbol.style.display = 'table-cell';
+            } else {
+                colSymbol.style.display = 'none';
+            }
+
             body.innerHTML = data.ranking.map((item, index) => {
                 const changeClass = item.change_pct >= 0 ? 'positive' : 'negative';
                 const changeSign = item.change_pct >= 0 ? '+' : '';
-                return `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td>${item.name}</td>
-                        <td>${item.net_money.toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                        <td class="${changeClass}">${changeSign}${item.change_pct.toFixed(2)}%</td>
-                    </tr>
-                `;
+                
+                if (data.market === '美股') {
+                    return `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${item.name}</td>
+                            <td style="text-align:center; font-family:monospace;">${item.symbol}</td>
+                            <td>${item.net_money.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                            <td class="${changeClass}">${changeSign}${item.change_pct.toFixed(2)}%</td>
+                        </tr>
+                    `;
+                } else {
+                    return `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${item.name}</td>
+                            <td>${item.net_money.toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                            <td class="${changeClass}">${changeSign}${item.change_pct.toFixed(2)}%</td>
+                        </tr>
+                    `;
+                }
             }).join('');
 
             container.classList.add('active');
